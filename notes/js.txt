@@ -1,0 +1,61 @@
+professional javascript for web developer
+javascript: the definitive guide
+
+you don't know js
+
+speaking js
+eloquent javascript 3
+
+----
+
+
+JavaScript Cookbook, 3rd Edition
+
+JavaScript: The Definitive Guide, 7th Edition
+
+Practical Microservices
+
+TypeScript Quickly
+
+WebAssembly in Action
+
+Programming with Types
+
+Web Development with Node and Express, 2nd Edition
+
+The Design of Web APIs
+
+Effective TypeScript
+
+Web Components in Action
+
+Programming TypeScript
+
+HTTP/2 in Action
+
+Get Programming with Node.js
+
+Programming WebAssembly with Rust
+
+Serverless Applications with Node.js
+
+Build Reactive Websites with RxJS
+
+Eloquent JavaScript, 3rd Edition
+
+Designing Web APIs
+
+Mastering Modular JavaScript
+
+Learning GraphQL
+
+Rediscovering JavaScript
+
+Get Programming with JavaScript Next: New features of ECMAScript 2015, 2016, and beyond
+
+Simplifying JavaScript
+
+Reactive Programming with RxJS 5
+
+Node.js 8 the Right Way
+
