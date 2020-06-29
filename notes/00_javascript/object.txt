@@ -1,0 +1,45 @@
+object initializer (optional trailing comma, shorthand variable property, shorthand method)
+comma operator
+method definitions
+getter
+setter
+
+property accessors (get and set)
+in operator
+for ...in
+delete operator vs setting to undefined
+
+optional chaining
+
+this
+
+spread syntax
+
+assignment operators
+destructuring assignment
+
+----
+
+instanceof
+new operator
+new.target
+super
+
+----
+
+class ==> custom types
+
+subclassing ==> setup is-a relationship between types
+
+extends
+
+first call super() in consturctor
+
+overriding
+
+
+
+
+
+
+
