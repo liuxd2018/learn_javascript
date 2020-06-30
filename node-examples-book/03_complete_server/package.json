@@ -1,0 +1,16 @@
+{
+  "name": "03_complete_server",
+  "version": "1.0.0",
+  "description": "* connecting to a database\r * handling authentication\r * logging\r * deployment",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
