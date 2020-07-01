@@ -14,3 +14,6 @@ const func = () => {
 }
 
 func();
+
+console.log(import.meta.url)
+console.log(Deno.cwd()) // require --allow-read
