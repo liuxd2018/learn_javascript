@@ -14,6 +14,8 @@
 
 ### syntax
 
+[syntax](https://stackoverflow.com/questions/43814830/destructuring-a-default-export-object)
+
 ```js
 // addTwo.mjs
 
@@ -123,6 +125,8 @@ distributed software should use pinned version
 `module.exports` `exports` for defining what a module
 exports and makes available through `require()`
 
+[exports and module.exports](https://stackoverflow.com/questions/7137397/module-exports-vs-exports-in-node-js)
+
 ```js
 // cjsmodule
 
@@ -138,6 +142,7 @@ function print(str) {
 }
 print.log = (str) => console.log(`logging... ${str}`)
 module.exports = print
+// pr
 ```
 
 ```js
@@ -168,3 +173,17 @@ module.exports = {
     funcC: myFunc
 }
 ```
+
+
+## trying json api
+
+### curl + jq
+
+curl -sG http://localhost:1337/users -d offset=3 -d limit=3 | jq
+
+curl -sG http://localhost:1337/users -d offset=3 -d limit=3 | jq '.[] | {phone, website}'
+
+curl -s http://localhost:1337/users/2 | jq
+
+### postman
+

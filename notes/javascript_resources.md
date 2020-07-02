@@ -44,8 +44,8 @@ the joy of javascript 2020
 ### node
 
 + Node.js 8 the Right Way 2017 12 31 334
-get programming with node.js 2019
-express in action: writing, building, and testing node.js applications 2016
++ get programming with node.js 2019
+- express in action: writing, building, and testing node.js applications 2016
 
 ### deno
 
