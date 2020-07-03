@@ -92,6 +92,10 @@ getting MEAN with Mongo, Express, Angular and node
 
 ## [The Pragmatic Programmer](https://pragprog.com/)
 
+node.js 8 the right way
+design and build great web apis
+practical microservices
+
 Reactive Programming with RxJS 5 2018 02 05 144
 React for Real 2017 08 31 118
 Test-Driven React 2019 06 05 190

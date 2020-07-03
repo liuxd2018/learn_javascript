@@ -4,6 +4,13 @@
 /// ECMAScript Array API (specially handled by compiler)
 /////////////////////////////
 
+interface ConcatArray<T> {
+    readonly length: number;
+    readonly [n: number]: T;
+    join(separator?: string): string;
+    slice(start?: number, end?: number): T[];
+}
+
 interface ReadonlyArray<T> {
     /**
      * Gets the length of the array. This is a number one higher than the highest element defined in an array.
@@ -122,12 +129,7 @@ interface ReadonlyArray<T> {
     readonly [n: number]: T;
 }
 
-interface ConcatArray<T> {
-    readonly length: number;
-    readonly [n: number]: T;
-    join(separator?: string): string;
-    slice(start?: number, end?: number): T[];
-}
+
 
 interface Array<T> {
     /**
