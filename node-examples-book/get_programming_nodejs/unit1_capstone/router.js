@@ -1,13 +1,13 @@
-const httpStatus = require('http-status-codes')
-const contentTypes = require('./content_type.js')
-const {readFile} = require('fs')
+import httpStatus from 'http-status-codes'
+import {contentTypes} from './content_type.js'
+import {readFile} from 'fs'
 
 const routes = {
     GET: {},
     POST: {},
 }
 
-function getFile(file, res) {
+export function getFile(file, res) {
     readFile(`./${file}`, (err, data) => {
         if(err) {
             res.writeHead(httpStatus.INTERNAL_SERVER_ERROR. contentTypes.html);
@@ -18,7 +18,7 @@ function getFile(file, res) {
     })
 }
 
-function handle(req, res) {
+export function handle(req, res) {
     try {
         routes[req.method][req.url](req, res);
     } catch (e) {
@@ -27,11 +27,11 @@ function handle(req, res) {
     }
 }
 
-function get(url, handler) {
+export function get(url, handler) {
     routes["GET"][url] = handler
 }
 
-function post(url, handler) {
+export function post(url, handler) {
     routes["POST"][url] = handler
 }
 
@@ -43,9 +43,9 @@ function post(url, handler) {
 //     post,
 // }
 
-module.exports = {
-    getFile,
-    handle,
-    get,
-    post,
-}
+// module.exports = {
+//     getFile,
+//     handle,
+//     get,
+//     post,
+// }

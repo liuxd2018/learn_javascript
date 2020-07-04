@@ -1,4 +1,5 @@
-exports = {
+
+export const contentTypes =  {
     html: {
         'Content-Type': 'text/html'
     },

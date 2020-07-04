@@ -1,7 +1,7 @@
-const {createServer} = require('http')
-const httpStatus = require('http-status-codes')
-const contentTypes = require('./content_type.js')
-const {getFile, get, post, handle} = require('./router.js')
+import {createServer} from 'http'
+import  httpStatus from 'http-status-codes'
+import {contentTypes} from './content_type.js'
+import {getFile, get, post, handle} from './router.js'
 
 const port = 3000;
 
