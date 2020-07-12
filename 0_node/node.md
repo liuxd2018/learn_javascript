@@ -1,5 +1,86 @@
 # node notes
 
+## functional programming in js
+
+
+
+total
+idempotent
+monad
+functor
+
+easier to reason about programming
+
+less predictable and harder to test
+
+```js
+async function printOrderDetails(ids) {
+    let url = `/orders?ids=${ids.join(',')}`
+    let orders = await fetchJson(url) // side effects
+
+    for( let i = 0; i < orders.length; i++ ) {
+        let {id,date, customer} = orders[i]
+        let details = `Order ${id} on ${date} by ${customer}`
+
+        console.log(details) // side effects
+    }
+}
+// testing
+const td = require('testdouble')
+
+describe('order details', () => {
+    let originalLog = console.log
+    let printOrderDetails
+    let fetchJson
+
+    beforeEach(() => {
+        fetchJson = td.replace('./fetchJson') // mock
+        console.log = td.function('console.log') // mock
+        printOrderDetails = require('./printOrderDetails')
+    })
+
+    afterEach(() => {
+        td.reset()
+        console.log = originalLog
+    })
+
+    it('prints details for multiple orders', async () => {
+        td
+        .when(fetchJson('/orders?ids=1,2,3'))
+        .thenResolve([
+            {id: 1, date: '12/1/17', customer: 'Tucker'},
+            {id: 2, date: '11/25/17', customer: 'Sally'},
+            {id: 3, date: '3/30/18', customer: 'Joe'},
+        ])
+
+        await printOrderDetails([1, 2, 3])
+
+        td.verify(console.log('Order 1 on 12/1/17 by Tucker'))
+        td.verify(console.log('Order 2 on 11/25/17 by Sally'))
+        td.verify(console.log('Order 3 on 3/30/18 by Joe'))
+    })
+
+})
+```
+
+pure
+
+```js
+const url = ids => `/orders?ids=${ids.join(',')}`
+const orderDetails = ({ id, date, customer }) =>
+    `Order ${id} on ${date} by ${customer}`
+
+function detailsForOrders(orders) {
+    let details = []
+    for (let i = 0; i < orders.length; i++) {
+        details.push(orderDetails(orders[i]))
+    }
+    return details
+}
+
+
+```
+
 ## get programming with nodejs 2019
 
 ### foreword
