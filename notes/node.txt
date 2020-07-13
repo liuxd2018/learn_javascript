@@ -1,0 +1,20 @@
+control flow
+events
+buffer and streams
+error handling
+
+child processes
+file system
+javascript prerequisites
+module system
+
+process/os
+package.json
+unit testing
+diagnostics
+
+cli
+
+creating services
+* key RESTful servers/services building skills
+* fundamental security practices

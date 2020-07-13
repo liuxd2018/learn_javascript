@@ -1,0 +1,21 @@
+• Syntax is just how you write something
+• Semantics is what that something means
+– Type-checking (before program runs)
+– Evaluation (as program runs)
+• For variable bindings:
+– Type-check expression and extend static environment(used in type-checking)
+– Evaluate expression and extend dynamic environment(holds values, the results of evaluating expressions)
+
+variable binding(declaration and initialization)
+
+expressions
+
+variable reference
+
+values
+
+syntax
+semantics
+idioms
+libraries (module and package)
+tools
