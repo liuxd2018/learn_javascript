@@ -47,34 +47,30 @@ console.log(person1 instanceof Object)
 [private](https://github.com/tc39/proposal-private-methods)
 [private class property](https://github.com/tc39/proposal-static-class-features/)
 
-```
+```js
 class name [extends otherName] {
   // class body
 
+    // constructor
     constructor([arguments]) { ... }
 
-
+    // public member
     instanceField = 'instance field';
     static staticField = 'static field' ;
-
-
-
     static methodName() { ... }
-
     methodName() { ... }
 
+    // private identifiers, only use them in class body
     #privateField;
     #privateMethod() {     
     return 'hello world'
     }
     static #PRIVATE_STATIC_FIELD;
-
     static #privateStaticMethod() {
         return 42
     }
 
     // and same for accessor property
-
     get methodName() {}
     set methodName() {}
 
@@ -86,10 +82,10 @@ class name [extends otherName] {
  }
 ```
 
-```
+```js
 extends
 
-super([arguments]); // calls the parent constructor.
+super([arguments]); // calls the parent constructor, setup inheritance
 super.functionOnParent([arguments]);
 ```
 

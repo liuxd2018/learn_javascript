@@ -1,4 +1,4 @@
-import { Color } from "./example.ts";
+import { Color } from "./example";
 
 function displayColor(color: Color): void { // using the type Color
     console.log(color)

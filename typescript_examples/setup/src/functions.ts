@@ -160,8 +160,8 @@ function call<T extends unknown[], R>(
 }
 
 call(fill, 5, 'a') // T infers to [number, string], R infers to string[]
-call(fill, 5, 5) // Error
-call(fill, 5, 'a', 5) // Error
+// call(fill, 5, 5) // Error
+// call(fill, 5, 'a', 5) // Error
 
 type MyEvent<T extends Element = Element> = {
     target: T;
@@ -187,22 +187,22 @@ function is<T>(...args: T[]): boolean {
 
 is('string', 'otheri')
 is(true, false)
-is(10, 'foo')
+// is(10, 'foo')
 
 is([1], [1, 2], [1, 2, 3])
 
 
-function reserve(destination: string, from: Date = new Date(), to?: Date) {
-    if(to !== undefined) {
-        // round trip
-    } else {
-        // one way trip
-    }
-}
+// function reserve(destination: string, from: Date = new Date(), to?: Date) {
+//     if(to !== undefined) {
+//         // round trip
+//     } else {
+//         // one way trip
+//     }
+// }
 
-reserve('h')
-reserve('h', new Date())
-reserve('h', new Date(), new Date())
+// reserve('h')
+// reserve('h', new Date())
+// reserve('h', new Date(), new Date())
 
 let aa : number[] = []
 

@@ -1,4 +1,6 @@
 top type: unknown
+    you can perform boolean operation on unknown, because of falsy and truthy system
+    you can perform comparison on unknown(binary operation) 
 
 type narrowing
     * refinement
@@ -13,7 +15,7 @@ value type (primitives, immutable, copy semantic for assignment operator)
 
 type literal: using value at type position
     * unit type, has single value
-    * infer rule for let and const
+    * infer rule for let and const with value type or reference type
     * comparision (==, ===) between different type literal always return false error
 
 subtyping and type compatibility
@@ -22,9 +24,9 @@ subtyping and type compatibility
 bottom type: never
 
 other bottom like type:
-    void for sideeffect function signal completion  Promise<void>
-    null together with union type to express optional  number | null Promise<number | null>
-    undefined
+    `void` for sideeffect function signal completion  `Promise<void>`
+    `null` together with union type to express optional output `number | null` `Promise<number | null>`
+    `undefined` together with union type to express optional input `number | undefined`
 
 reference type / shape(structured compatibable, mutable, alias semantic for assignment operator)
 
@@ -34,33 +36,81 @@ defining shape:
     * optional
     * index signature
 
+```ts
+interface Shape {
+    readonly age: number;
+    name: string;    // somewhat analogous to function parameter type
+    gender?: number;
+    [key: number]: number;
+}
+
+let airplaneSeatingAssignment: {[seatNumber: string]: string} = {
+        '34D': 'Boris Cherny'
+}
+```
+
 empty shape --- object
 
 you can't assign null to structure type: strictNullCheck
 
 escape hatch type: any
 
-type level expression
+*type-level code*
+    code that exclusively of types and type operators
+
+*type level expression*
     * 1 'txt'
     * number, string
     * {a: number;}
     * number | null
     * Foldable & Printable
     * typeof valueIdentifier
-type level binding
+
+*type level binding* `type` `interface`
     type Name = typeExpresion
+
+*type level parameter*: generics `Array<T>`
+
+*using generic* `type a = Array<number>`
 
 union ==> type narrowing
     discriminated union type
+
+subtyping:
+    super type  vs.  union type
+    casting     vs.  refinement/narrowing(`typeof`, `instanceof`, switch for type literal)
+
 intersection
 
 array
 
 readonly array
 
-tuple
+tuple: normally have fixed length.
 
 readonly tuple
+
+```ts
+// array
+number[]
+(number | string)[]
+unknown[]
+any[]
+
+// tuple
+[number]
+[string, number, string]
+[number, number?] // equivalently [number] | [number, number]
+[string, ...string[]] // array with minimum length
+
+// readonly array and tuple
+readonly number[]
+readonly [number, string]
+```
+
+inference rule for array and tuple
+    * array type become more specific in the same scope with adding elements
+    * tuple need to explicitly declared
 
 const enum with only string value. and preserveConstEnums
 
@@ -74,8 +124,12 @@ type A = typeof n
 
 how import and export works with type level binding?
 
+companion pattern: a value and a type have same name.
+
 ```ts
 // lib.ts
+
+// type Color = 'red' | 'green'
 export const Color = {
     RED:'red',
     GREEN:'green'
@@ -118,7 +172,3 @@ how to see the type of some thing?
 * deno doc src/functions.ts
 
 and this three is not consistent.
-
-
-type-level code
-    code that exclusively of types and type operators

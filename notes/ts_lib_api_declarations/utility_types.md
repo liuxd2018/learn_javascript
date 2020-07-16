@@ -1,4 +1,7 @@
 ```ts
+
+/////////// mapped types
+
 /**
  * Make all properties in T optional
  */
@@ -35,6 +38,14 @@ type Record<K extends keyof any, T> = {
 };
 
 /**
+ * Construct a type with the properties of T except for those in type K.
+ */
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+
+
+//////// conditional types
+
+/**
  * Exclude from T those types that are assignable to U
  */
 type Exclude<T, U> = T extends U ? never : T;
@@ -44,10 +55,6 @@ type Exclude<T, U> = T extends U ? never : T;
  */
 type Extract<T, U> = T extends U ? T : never;
 
-/**
- * Construct a type with the properties of T except for those in type K.
- */
-type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
 
 /**
  * Exclude null and undefined from T
@@ -73,6 +80,12 @@ type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => i
  * Obtain the return type of a constructor function type
  */
 type InstanceType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any;
+
+
+
+
+
+//// marker
 
 /**
  * Marker for contextual 'this' type

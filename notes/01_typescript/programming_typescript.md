@@ -672,7 +672,7 @@ let trainFares: [number, number?][] = [
 // equivalently ([number] | [number, number])[]
 
 // rest element `...` and must has an array type
-// type tuples with minimunlengths
+// type tuples with minimum length
 let friends: [string, ...string[]] = [
     'Saea', 'Tali', 'Chloe'
 ]
@@ -789,7 +789,7 @@ displayColor(Color.GREEN) // using the value Color
 
 ```
 
-## chap 4 functions
+## chap4 functions
 
 previously, basic types: primitive type, object, array, tuple, enum
 
@@ -1241,7 +1241,7 @@ function triggerEvent<T>(event: MyEvent<T>): void {
     // ...
 }
 
-triggerEvent({
+triggerEvent({ // T infered to Element | null
     target: document.querySelector('#myButton'),
     type: 'mouseover',
 })
@@ -1371,4 +1371,1493 @@ the function's type signature might end up telling you
 most of what you need to know about that function.
 
 ## chap5 class and interface
+
+### class
+
+declare classes with the `class` keyword, extend them with
+the `extends` keyword.
+
+preperties default to public and instance
+change to static using `static`, change to private using `#`
+
+constructor
+
+`super`
+ * setup inheritance in constructor
+ * call super method, to overriding method
+
+`this` as return type, standard js `Symbol.sepcies` 
+    without it, you have to override the signature for
+    each method that returns this
+* chained APIs
+* builder pattern
+
+### interface
+
+differences from type aliases
+
+```ts
+// type aliase
+type Food = {
+    calories: number;
+    tasty: boolean;
+}
+type Sushi = Food & {
+    salty: boolean;
+}
+type Cake = Food & {
+    sweet: boolean;
+}
+
+// interface
+interface Food {
+    calories: number;
+    tasty: boolean;
+}
+interface Sushi extends Food {
+    salty: boolean;
+}
+interface Cake extends Food {
+    sweet: boolean;
+}
+```
+
+interface can extend any shape, an object type, a class, or anoher interface
+
+* type aliases are more general
+    righthand side can be any type, type expression(& and |)
+    interface righthand side must be a shape.
+    ```ts
+    type A = number
+    type B  = A | string
+    ```
+* when you extend an interface, ts will make sure that the interface you're
+    extending is assignable to your extension.
+    * same name properties should form subtype realtionship
+    ```ts
+    interface A {
+        p: number | string;
+        good(x: number):string;
+        bad(x: number):string;
+    }
+    interface B extends A {
+        p: number;
+        good(x: string | number): string; 
+        bad(x: string): string; // Error
+    }
+    ```
+* multiple interfaces with the same name in the same scope are automatically merged.
+    error for samme name type aliases
+    this should be linter rule
+
+use type aliases for type expresion
+use interface for shape
+
+#### `implements`
+
+like other explicit type annotations, this is a convenient way to add a type-level
+constraint that your class is implemented correctly.
+
+user of class will `programming to interface`
+
+adapters, factories, strategies
+
+```ts
+interface Animal {
+    readonly name: string;
+    eat(food: string): void;
+    sleep(hours: number):void;
+}
+
+interface Feline {
+    meow(): void;
+}
+
+class Cat implements Animal, Feline {
+    #name = "MeowMeow"
+    eat(food: string) {
+        console.info(`Ate some ${food}. Mmm!`)
+    }
+    sleep(hours: number) {
+        console.info(`Slept for ${hours} hours`)
+    }
+    meow() {
+        console.info('Meow')
+    }
+    get name() {
+        return this.#name;
+    }
+}
+```
+
+### more class
+
+#### compatibility rule
+
+classes are structured typed. a class is compatible with any other
+type that shares its shape, including a regular old object that
+defines the same properties or methods as the class.
+
+`private identifier` change this, because you can't use private identifier
+outside class body. then you must use the class or subclass to create instance.
+
+```ts
+class Cat {
+    #name = "MeowMeow"
+    eat(food: string) {
+        console.info(`${this.#name} ate some ${food}. Mmm!`)
+    }
+    sleep(hours: number) {
+        console.info(`${this.#name} slept for ${hours} hours`)
+    }
+    meow() {
+        console.info(`${this.#name} Meow`)
+    }
+}
+
+function make(cat:Cat) {
+    cat.meow();
+}
+
+make(new Cat())
+
+let obj = {
+    #name : 'm', // Error you can't not use private identifier here
+    eat(food: string){
+
+    },
+    sleep(hours: number) {
+    },
+    meow() {
+        console.log('hello')
+    },
+}
+
+make(obj) // Error lack of #name
+```
+
+#### class declare both values and types
+
+type namespace
+value namespace
+
+```ts
+// values
+let a = 1999
+function b() {}
+
+// types
+type a = number
+interface b {
+    (): void
+}
+```
+
+contextual term resolution:
+    type and value can have same name, depending on how you
+    use a term, ts knows whether to resolve it to a type or to a value.
+
+companion types, companion object pattern
+
+class and enum generate both a type in the type namespace and a value
+in the value namespace.
+
+```ts
+class C {}
+let c: C = new C()
+
+const enum E {F = 'F', C = 'C'}
+let e: E = E.F
+```
+
+in compile time, we need a way to say 'this variable should be an instance
+of this class'
+
+in runtime, we need a way to represent a class, so we can instantiate it with
+`new`, call static methods on it, do metaprogramming with it, and operate on it
+with `instanceof`
+
+how do you get the type of class itself?
+
+`typeof` type operator, takes a value identifier get the type of identifier
+like the javascript's value-level typeof
+
+```ts
+type State = {
+    [key: string]: string;
+}
+
+class StringDataBase {
+    state: State
+    constructor(state: State = {}) {
+        this.state = state;
+    }
+    get(key: string): string | null {
+        return key in this.state ? this.state[key] : null
+    }
+    set(key: string, value: string): void {
+        this.state[key] = value
+    }
+    static from(state: State) {
+        let db = new StringDataBase();
+        for (let key in state) {
+            db.set(key, state[key])
+        }
+        return db;
+    }
+}
+
+// instance type
+
+interface StringDataBase {
+    state: State;
+    get(key: string): string | null;
+    set(key: string, value: string): void;
+}
+
+// constructor type
+// typeof StringDataBase
+interface StringDataBaseConstructor {
+    new(state?: State): StringDataBase;
+    from(state: State): StringDataBase;
+}
+```
+
+### generic in class and interface
+
+scope a generic to whole class or interface, or to specific method
+
+```ts
+class MyMap<K, V> { // available on instance method and instance properties
+
+    // constructor should not declare generics, move to class instead
+    constructor(initialKey: K, initialValue: V) {}
+
+    get(key: K): V {}
+
+    set(key: K, value: V): void {}
+
+    // instance method declare their own generics
+    merge<K1, V1>(map: MyMap<K1, V1>): MyMap<K | K1, V | V1> {}
+
+    // static method do not have access to class's generics
+    static of<K, V>(k: K, v: V): MyMap<K, V> {}
+}
+
+interface MyMap<K, V> {
+    get(key: K): V
+    set(key: K, value: V): void
+}
+
+let a = new MyMap('k', true) // MyMap<string, boolean>
+let b = new MyMap<string, number>()
+```
+
+### trait(interface with default implementation of method)
+
+method implementation in terms of other method
+
+role-oriented programming
+
+```ts
+type ClassConstructor<T> = new(...args: any[]) => T // the type of a constructor type's parameter has to be `any[]`
+
+function withDebug<C extends ClassConstructor<{getDebugValue(): object}>>(klass: C) {
+    return class extends klass {
+        // constructor(...args: any[]) {
+        //     super(...args)
+        // }
+
+        debug() {
+            let name = klass.name
+            let value = this.getDebugValue() // contract method
+            return `${name}(${JSON.stringify(value)})`
+        }
+    }
+}
+
+class User {
+    #id: number;
+    #firstName: string;
+    #lastName: string;
+    constructor(id: number, firstName: string, lastName: string) {
+        this.#id = id;
+        this.#firstName = firstName;
+        this.#lastName = lastName;
+    }
+
+    getDebugValue() {
+        return {
+            id: this.#id,
+            name: `${this.#firstName} ${this.#lastName}`
+        }
+    }
+}
+
+const DebugUser = withDebug(User)
+
+let user = new DebugUser(3, 'hello', 'world')
+
+console.log(user.debug())
+```
+
+### decorators
+
+`experimentalDecorator : true`
+
+class
+class method
+property
+method parameter
+
+requires a function in scope with the given name
+and required signature for that type of decorator.
+
+decorators don't work on normal function
+[anwser](https://stackoverflow.com/questions/31771856/decorators-on-functions)
+
+### other class idiom and pattern
+
+* abstract class `new.target` non-instantiatable
+* final class `new.target` non-extensible, method nonoveridable
+* mixin pattern: derive class from expression
+* multiple inheritance
+
+inheritance of type = interface
+inheritance of behavior = trait
+inheritance of state and behavior = class, mixin(derive class from expression)
+
+class is for *custom type*, singleton(like connection object for database) is not
+class.
+
+factory pattern:
+    create objects of some type, leaving the decision of which concrete object
+    to create to the specific factory that creates the object.
+
+```ts
+interface Shoe {
+    purpose: string;
+}
+
+class BalletFlat implements Shoe {
+    purpose = 'dancing'
+}
+class Boot implements Shoe {
+    purpose = 'woodcutting'
+}
+class Sneaker implements Shoe {
+    purpose = 'walking'
+}
+
+const Shoe = {
+    // consumer shouldn't know what concrete class they'll get
+    create(type: 'balletFlat' | 'boot' | 'sneaker'): Shoe { 
+        switch (type) {
+            case 'balletFlat': return new BalletFlat()
+            case 'boot': return new Boot()
+            case 'sneaker': return new Sneaker()
+        }
+    }
+}
+```
+
+companion object pattern:
+    a value and a type with the same name,
+    as a way to signal that value provides methods
+    for operating on the type
+
+builder pattern:
+    separate the construction of an object from the way that
+    object is actually implemented
+
+## chap6 advance types
+
+### relationship between types, type compatibility
+
+you can safely use a subtype where supertype is required.
+
+variance
+    invariance
+    covariance
+    contravariance
+    bivariance
+
+shape:
+    covariant in their property types.
+    for an object A to be assignable to B, each of its properties
+    must be subtype of or the same as its corresponding property in B.
+
+    may lead to unsafe behavior, (don't mutate, delete object property)
+generic type
+function
+    contravariant at parameter type, covariant at return type
+    requires less, provides more
+
+assignability:
+    if A is subtype of or the same as B, you can use a type A where
+    type B is required.
+
+    A is `any`
+
+### type widening(inference rule):
+    ts will be lenient when inferring your types
+
+```ts
+let a = 'x' //string
+let b = 3   //number
+let c = true//boolean
+const d = {x: 3} // {x: number}
+
+// more strict
+
+const a = 'x'
+const b = 3
+const c = true
+const d: {x: 3} = {x : 3}
+```
+
+when you reassign a nonwidened type using `let` or `var`,
+ts widens it for you. to tell ts to keep it narrow, add an
+explicit type annotation to your original declaration.
+
+```ts
+const a  = 'x'  // 'x'
+let b = a       // string
+
+const c: 'x' = 'x' // 'x'
+let d = c          // 'x'
+```
+
+variables initialized to null or undefined are widened to any,
+when the variable leaves the scope it was declared in, ts assigns
+it a definite type
+
+```ts
+function x() {
+    let a = null // any
+    a = 3        // any
+    a = 'x'      // any
+    return a
+}
+
+x() // string
+```
+
+### the `const` type modifier
+
+opt out of type widening in value declaration.
+recursively marks its member as `readonly`
+
+```ts
+let a = {x: 3} // {x: number}
+let b = {x: 3} as const // {readonly x: 3}
+
+let c = [1, {x: 2}] // (number | {x: number})[]
+let d = [1, {x: 2}] as const // readonly [1, {readonly x: 2}]
+```
+
+### excess property checking(assignable checking)
+
+object types are covariant in their members, with excess property
+checking for object literal.
+
+when you try to assign a *fresh object literal type* T to another type U,
+and T has properties that aren't presetn in U, ts reports an error.
+
+fresh object literal type:
+    the type ts infers from an object literal
+
+if that object literal either use a type assertion or is assigned to a
+variable, then the fresh object literal type is widened to a regular
+object type, and its freshness disappears.
+
+```ts
+type Options = {
+    baseURL: string;
+    cacheSize?: number;
+    tier?: 'prod' | 'dev';
+}
+
+class API {
+    constructor(private options: Options) {}
+}
+
+new API({
+    baseURL: 'http://api.com',
+    tier: 'prod'
+})
+
+new API({
+    baseURL: 'http://api.com',
+    tierr: 'prod' // Error object literal may only specifiy known properties
+})
+
+new API({
+    baseURL: 'http://api.com',
+    tierr: 'prod' 
+} as Options)
+
+let badOption = {
+    baseURL: 'http://api.com',
+    tierr: 'prod' 
+}
+new API(badOption)
+
+let badOption1: Options = {
+    baseURL: 'http://api.com',
+    tierr: 'prod' // Error object literal may only specifiy known properties
+}
+new API(badOption1)
+```
+
+### refinement
+
+flow-based type inference.
+    refine types within a block of code, and is alternative to Haskell/Ocaml pattern matching
+    embed a symbolic execution engine in the typechecker to give feedback to the typechecker
+    and reason through a program in a way that is closer to how a human programmer might do it.
+
+symbolic evaluator
+
+use control flow statement like `if`, `?`, `||`, `??`, and `switch`,
+as well as type queries like `typeof`, `instanceof` and `in`, to refine
+types as it goes.
+
+```ts
+type Unit = 'cm' | 'px' | '%'
+const units: Unit[] = ['cm', 'px', '%']
+
+function parseUnit(value: string): Unit | null {
+    for(const unit of units) {
+        if(value.endsWith(unit)) {
+            return unit
+        }
+    }
+    return null
+}
+
+type Width = {
+    unit: Unit;
+    value: number;
+}
+function parseWidth(width?: number | string): Width | null {
+    if(width == null) { // nullish checking
+        return null;
+    }
+    // if input is number, unit default to px
+    if(typeof width === 'number') { // typeof checking
+        return {unit: 'px', value: width}
+    }
+
+    let unit = parseUnit(width)
+    if(unit) { // truthy checking
+        return {unit, value: Number.parseFloat(width)}
+    }
+    return null
+}
+```
+
+#### discriminated union for shape
+
+members of a union might overlap
+
+```ts
+type UserTextEvent = {value: string, target: HTMLInputElement}
+type UserMouseEvent = {value: [number, number], target: HTMLElement}
+type UserEvent = UserTextEvent | UserMouseEvent
+
+function handle(event:UserEvent) {
+    if(typeof event.value === 'string') {
+        event.value // string
+        event.target // HTMLInputElement | HTMLElement
+    }
+
+    event.value // [number, number]
+    event.target // HTMLInputElement | HTMLElement
+}
+
+type UserTextEvent = {type: 'TextEvent'; value: string, target: HTMLInputElement}
+type UserMouseEvent = {type: 'MouseEvent'; value: [number, number], target: HTMLElement}
+type UserEvent = UserTextEvent | UserMouseEvent
+
+function handle(event:UserEvent) {
+    if(event.type === 'TextEvent') {
+        event.value // string
+        event.target // HTMLInputElement
+    }
+
+    event.value // [number, number]
+    event.target //  HTMLElement
+}
+```
+
+refinement based on the value of tagged field, because they are mutually exelusive
+
+### exhaustiveness checking, totality (pattern matching)
+
+allow typechecker to make sure you've covered all your cases.
+
+```ts
+type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri'
+type Day = Weekday | 'Sat' | 'Sun'
+
+function getNextDay(w: Weekday): Day {
+    switch(w) {
+        case 'Mon': 
+            return 'Tue';
+        case 'Tue':
+            return 'Wed';
+        case 'Wed':
+            return 'Thu';
+        case 'Thu':
+            return 'Fri';
+        case 'Fri':
+            return 'Sat';
+    }
+}
+```
+
+`noImplicitReturns`
+
+```ts
+// not all code path  return a value
+function isBig(n: number) {
+    if( n>= 100 ) {
+        return true
+    }
+}
+```
+
+### type operators
+
+#### keying-in
+
+```ts
+type APIResponse = {
+    user: {
+        userId: string
+        friendList: {
+            count: number
+            friends: {
+                firstName: string
+                lastName: string
+            }[]
+        }
+    }
+}
+// key-in using string literal type and number literal type
+type FriendList = APIResponse['user']['friendList']
+type Friend = APIResponse['user']['friendList']['friends'][number] // can be 0 and number
+type FriendList = APIResponse['user']['userId' | 'friendList']
+```
+
+#### keyof
+
+```ts
+type UserKeys = keyof APIResponse['user'] // 'userId' | 'friendList'
+```
+
+typesafe getter function that looks up the value at the given key in an object:
+
+```ts
+function get<O extends object, K extends keyof O>(o: O, k: K): O[K] {
+    return o[k];
+}
+
+// O[keyof O] a union of property type
+
+type ActivityLog = {
+    lastEvent: Date
+    events: {
+        id: string
+        timestamp: Date
+        type: 'Read' | 'Write'
+    }[]
+}
+
+const activityLog: ActivityLog = // ...
+const lastEvent = get(activityLog, 'lastEvent') // Date
+
+// three times deep
+function get<O extends object,
+             K1 extends keyof O>(o: O, k1: K1): O[K1];
+function get<O extends object,
+             K1 extends keyof O,
+             K2 extends keyof O[K1]>(o: O, k1: K1, k2: K2): O[K1][K2];
+function get<O extends object,
+             K1 extends keyof O,
+             K2 extends keyof O[K1],
+             K3 extends keyof O[K1][K2]>(o: O, k1: K1, k2: K2, k3: K3): O[K1][K2][K3];
+function get(obj: any, ...keys: string[]) {
+    let result = obj;
+    keys.forEach(k => result = result[k])
+    return result;
+}
+
+get(activityLog, 'events', 0, 'type') // 'Read' | 'Write'
+```
+
+#### type utility
+
+* `Record<Keys, PropertyType>`
+
+```ts
+type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri'
+type Day = Weekday | 'Sat' | 'Sun'
+
+type map = Record<Weekday, Day> // {Mon: Day, Tue: Day, ...}
+const nextDay: Record<Weekday, Day> = {
+    // ...
+}
+```
+
+extra degree of freedom campared to regular object index signature.
+constrain the types of an object's keys to an union, instead of string or number
+
+* mapped type in shape
+
+special syntax like index signature
+
+type MyMappedType = {
+    [Key in UnionType]: ValueType
+}
+
+you can't put other property names in MappedType
+
+```ts
+type map = {[K in Weekday]: Day}
+const nextDay: {[K in Weekday]: Day} = {
+    // ...
+}
+```
+
+how Record is defined:
+
+```ts
+type Record<K extends keyof any, T> = {
+    [P in K]: T
+}
+```
+
+together with `keyof` and key in, let you modify shape
+
+```ts
+type Account0 = {
+    id: number
+    isEmployee: boolean
+    notes: string[]
+}
+
+// all properties optional
+type OptionalAccount = {
+    [K in keyof Account0]? : Account0[K]
+}
+// all properties nullable
+type NullableAccount = {
+    [K in keyof Account0]: Account0[K] | null
+}
+// all properties read-only
+type ReadonlyAccount = {
+    readonly [K in keyof Account0] : Account0[K]
+}
+
+// all properties writable again
+type Account2 = {
+    -readonly [K in keyof ReadonlyAccount]: ReadonlyAccount[K]
+}
+// all properties required again
+type Account3 = {
+    [K in keyof OptionalAccount]-?: OptionalAccount[K]
+}
+```
+
+`-` a special type operator only available with mapped type.
+`-` has a corresponding `+` type operator. within a mapped type,
+`readonly` is equivalent to `+readonly`, `?` is equivalent to `+?`
+
+built-in mapped type utilities
+
+```ts
+/**
+ * Make all properties in T optional
+ */
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+};
+
+/**
+ * Make all properties in T required
+ */
+type Required<T> = {
+    [P in keyof T]-?: T[P];
+};
+
+/**
+ * Make all properties in T readonly
+ */
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+};
+
+/**
+ * From T, pick a set of properties whose keys are in the union K
+ */
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+};
+
+/**
+ * Construct a type with a set of properties K of type T
+ */
+type Record<K extends keyof any, T> = {
+    [P in K]: T;
+};
+```
+
+### companion object pattern
+
+pair together a type and an object
+
+```ts
+export const Unit = {
+    EUR: 'EUR',
+    GBP: 'GBP',
+    JPY: 'JPY',
+    USD: 'USD',
+} as const
+
+export type Unit = typeof Unit[keyof typeof Unit]
+
+export type Currency = {
+    unit: Unit
+    value: number
+}
+export const Currency = {
+    DEFAULT_UNIT: 'USD',
+    from(value: number, unit?: Unit): Currency {
+        if(unit == null) {
+            unit = this.DEFAULT_UNIT as Unit
+        }
+        return {unit, value}
+    }
+}
+```
+
+```ts
+import { Unit, Currency } from "./types.ts";
+
+const amountDue: Currency = {
+    unit: 'JPY',
+    value: 83733.10,
+}
+
+const amount: Currency = {
+    unit: Unit.GBP,
+    value: 100,
+}
+
+Currency.DEFAULT_UNIT
+
+Currency.from(10, Unit.JPY)
+```
+
+in the same scope, you can have the same name bound
+to both a type and a object.
+with the object providing utility methods that operate
+on the type.
+
+### improving type inference for tuples
+
+```ts
+let a = [1, true] // (number, boolean)[]
+
+let aa: [number, boolean] = [1, true]
+// type assertion
+let as = [1, true] as [1, true]
+// const assertion
+let ac = [1, true] as const
+```
+
+take advantage of the way typescript infers types for rest parameter
+
+```ts
+function tuple<T extends unknown[]>(...ts: T): T {
+    return ts;
+}
+
+let at = tuple(1, true) // [number, boolean]
+```
+
+### user-defined type guards
+
+refinement does not cross over scope
+
+```ts
+function isString(a: unknown): boolean {
+    return typeof a === 'string'
+}
+
+function parseInput(input: string | number) {
+    if(isString(input)) {
+        input // string | number
+    }
+}
+```
+default type guard: typeof instanceof
+`is` operator
+*user-defined type guard*
+
+limit to a single parameter
+
+```ts
+function isString(a: unknown): a is string {
+    return typeof a === 'string'
+}
+
+type LegacyDialog =  // ...
+type Dialog =  // ...
+
+function isLegacyDialog(dialog: LegacyDialog | Dialog): dialog is LegacyDialog {
+    // ...
+}
+```
+
+without this feature you'd have to inline all your typeof and instanceof type guards
+instead of building functions to perform those checks in a better-encapsulated,
+more readable way.
+
+### conditonal types
+
+subtype relationship condition
+
+declare a type T that depends on types U and V;
+if U <: V, then assign T to A, and otherwise, assign T to B
+
+```ts
+type IsString<T> = T extends string ? true : false
+
+type A = IsString<string> // true
+type B = IsString<number> // false
+```
+
+like regular ternary expression, you can nest them too.
+is a type expression, you can use them almost anywhere you can use
+a type: in type aliases, interfaces, classes, parameter types, and
+generic defaults in functions and methods
+
+ternary operator(?:)
+
+condition ? evaluated-when-true : evaluated-when-false
+
+nested
+
+condition ? value : (condition ? value : value)
+
+```ts
+let a = false ? 'a' : false ? 'b' : false ? 'c' : 'd' // d
+
+let b = true ? true ? true ? 'a' : 'b' : 'c' : 'd'    // a
+```
+
+#### distribute union types over the conditional's branches
+
+```ts
+(string | number | boolean) extends T ? A : B
+// equivalent to
+(string extends T ? A : B) | (number extends T ? A : B) (boolean extends T ? A : B)
+
+type ToArray<T> = T[]
+type A = ToArray<number> // number[]
+type B = ToArray<number | string> // (number | string)[]
+
+type ToArray2<T> = T extends unknown ? T[] : T[]
+type C = ToArray2<number | string> // nubmer[] | string[]
+```
+
+```ts
+// works for union type
+type Without<T, U> = T extends U ? never : T;
+type A = Without<
+    boolean | number | string,
+    boolean>
+type A1 = Without<boolean, boolean>
+        | Without<number, boolean>
+        | Without<string, boolean>
+type A2 = (boolean extends boolean ? never : boolean)
+        | (number extends boolean ? never : number)
+        | (string extends boolean ? never : string)
+type A3 = never | number | string
+```
+
+#### `infer`
+
+declare generic type parameters
+* angle brackets
+* infer in conditional types
+
+```ts
+type ElementType<T> = T extends unknown[] ? T[number] : T;
+type A = ElementType<string[]>; // number
+
+// using infer
+type ElementType<T> = T extends (infer U)[] ? U : T;
+```
+
+to get type of an array type's element, just use keying-in operator `[]`
+`string[][number]`
+
+```ts
+type SecondArg<F> = F extends (a: any, b: infer B) => any ? B : never
+// get the type of Array.slice
+type Fun = typeof Array['prototype']['slice']
+type A = SecondArg<Fun> // number | undefined
+```
+
+built-in conditional types
+
+### escape hatches (not safe)
+
+#### type assertions
+
+you can only assert that a type is a supertype or a subtype of itself.
+
+```ts
+function formatInput(input: string) {}
+
+function getUserInput(): string | number {}
+
+formatInput(getUserInput() as string)
+```
+
+linter: no-angle-bracket-type-assertion
+
+assert as any
+any is assignable to anything
+
+#### non-null assertions
+
+`T | null` or `T | null | undefined`
+
+non-null assertion operator `!`
+
+##### definite assignment assertions
+
+```ts
+let userId!: string;
+fetchUser();
+userId.toUpperCase(); // OK
+function fetchUser() {
+  userId = globalCache.get('userId');
+}
+```
+
+### simulating nominal types/opaque types
+
+```ts
+type CompanyID = string;
+type OrderID = string;
+type UserID = string;
+type ID = CompanyID | OrderID | UserID;
+
+function queryForUser(id: UserID) {
+  // ...
+}
+
+let id: CompanyID = 'b4843361';
+queryForUser(id); // OK (!!!)
+```
+
+*type branding* technique
+
+built-in *nominal type aliases*
+
+make it hard to accidentally use a wrong type
+
+```ts
+type CompanyID = string & { readonly brand: unique symbol };
+type OrderID = string & { readonly brand: unique symbol };
+type UserID = string & { readonly brand: unique symbol };
+type ID = CompanyID | OrderID | UserID;
+
+function CompanyID(id: string) {
+  return id as CompanyID;
+}
+function OrderID(id: string) {
+  return id as OrderID;
+}
+function UserID(id: string) {
+  return id as UserID;
+}
+
+function queryForUser(id: UserID) {
+  // ...
+}
+let companyId = CompanyID('8a6076cf');
+let orderId = OrderID('9994acc1');
+let userId = UserID('d21b1dbf');
+queryForUser(userId); // OK
+queryForUser(companyId); // Error
+```
+
+## chap7
+
+ts does everything it can to move *runtime exception*
+to compile time. eg. misspelled names, null pointer exceptions.
+
+* network and filesystem failures
+* errors parsing user input
+* stack overflows, and out of memory errors, this can't not be handled inside js
+
+[error handling strategies](https://www.youtube.com/watch?v=pvYAQNT4o0I)
+
+[Error Handling in Node.js](https://www.joyent.com/node-js/production/design/errors)
+
+*reproducible error*
+
+### return null
+
+* lose information, why the operation failed
+* hard to compose: having to check for null after every opertion can become verbose
+    as you start to *nest* and *chain* operations.
+
+!
+??  ||
+?.
+
+```ts
+function parse(birthDay: string): Date | null {
+    // ...
+}
+function display(date: Date): void {
+    console.info(`Date is ${date.toISOString()}`)
+}
+// to use
+let date = parse()
+if(date) {
+    display(date)
+} else {
+    console.error('Error parsing date for some reason')
+}
+```
+
+### throw exception
+
+handle specific failure modes and have metadata about
+the failure
+
+```ts
+function parse(birthDay: string): Date {
+    let date = new Date(birthDay)
+    if(!isValid(date)) {
+        throw new RangeError('Enter a date in the form YYYY/MM/DD')
+    }
+    return date;
+}
+
+// only handle the parsing error, rethrow other exceptions,
+// so we don't silently swallow every possible error
+
+try {
+    display(parse()) // composable
+} catch (e) {
+    if( e instanceof RangeError) {
+        console.error(e.message)
+    } else {
+        throw e
+    }
+}
+
+// we might want to subclass the error for more specific
+class InvalidDateFormatError extends RangeError {}
+class DateIsInFutureError extends RangeError {}
+function parse(birthDay: string): Date {
+    let date = new Date(birthDay)
+    if(!isValid(date)) {
+        throw new InvalidDateFormatError('Enter a date in the form YYYY/MM/DD')
+    }
+    if(date.getTime() > Date.now()) {
+        throw new DateIsInFutureError('Are you in future?')
+    }
+    return date;
+}
+function display(date: Date): void {
+    console.info(`Date is ${date.toISOString()}`)
+}
+try {
+    display(parse())
+} catch (e) {
+    if( e instanceof InvalidDateFormatError) {
+        console.error(e.message)
+    } else if (e instanceof DateIsInFutureError) {
+        console.error(e.message)
+    } else {
+        throw e
+    }
+}
+```
+
+wrapping any number of operations in single try/catch,
+we don't have to check each operation for failure.
+
+ts doesn't encode exception as part of a function's signature
+ts doesn't check for unhandled exception
+
+```ts
+/**
+ * @throws {InvalidDateFormatError} The user entered their birthday incorrectly.
+ * @throws {DateIsInFutureError} The user entered a birthday in the future.
+*/
+function parse(birthDay: string): Date {
+    // ...
+}
+```
+
+re-throw in catch needs finally to do logging and cleanup
+
+```ts
+function getData() {
+    let timestamp = performance.now()
+    try {
+        // fetch data
+        // ...
+    } catch(err) {
+        // deal with any error
+    }
+    console.log(`getData() took ${performance.now() - timestamp}`);
+}
+// if you rethrow in catch, you need to log inside finally
+function getData() {
+    let timestamp = performance.now()
+    try {
+        // fetch data
+        // ...
+    } catch(err) {
+        if(err instanceof FetchError) {
+            // deal with any error
+        } else {
+            throw err
+        }
+    } finally {
+        console.log(`getData() took ${performance.now() - timestamp}`);
+    }
+}
+```
+
+If code in your program throws an exception and no catch clause catches it, the
+program will print a stack trace and exit.
+
+Becase of node's asynchronous nature, exceptions that occur in callbacks or event
+handlers must be handled locally or not handled at all.
+
+```js
+function syncError() {
+    throw new Error('exception')
+}
+
+async function asyncError() {
+    throw new Error('rejection')
+}
+
+
+// for deno
+// catch success
+try {
+    syncError()
+} catch (error) {
+    console.log(error.message)
+} finally {
+    console.log('sync error finished')
+}
+// catch success
+try {
+    await asyncError()
+} catch (error) {
+    console.log(error.message)
+} finally {
+    console.log('async error finished')
+}
+// can't catch
+try {
+    asyncError()
+} catch (error) {
+    console.log(error.message)
+} finally {
+    console.log('async error finished')
+}
+
+// for node
+
+// async function main() {
+//     try {
+//         syncError()
+//         await asyncError() // if you ommit `await` rejection will not be caught
+//         asyncError()
+//     } catch (error) {
+//         console.log(error.message)
+//     } finally {
+//         console.log('finished')
+//     }
+// }
+
+// main()
+```
+
+If you don't want these exceptions to cause your program to completely
+crah, register a global handler function
+
+```js
+process.setUncaughtExceptionCaptureCallBack(e => {
+    console.error('Uncaught exception:', e)
+})
+```
+
+a similar situation arises if a Promise created by your program
+is rejected and there is no .catch() invocation to handle it.
+
+```js
+process.on('unhandledRejection', (reason, promise) => {
+    // resson is whatever value would have been passed to a .catch() function
+    // promise is the Promise object that rejected
+})
+```
+
+### union
+
+just return the error
+
+```ts
+function parse(birthDay: string): Date | InvalidDateFormatError | DateIsInTheFutureError {
+    // ...
+}
+function display(date: Date): void {
+    // ...
+}
+
+// consumer is forced to handle all three cases
+let result = parse();
+if(result instanceof InvalidDateFormatError) {
+    // error
+} else if (result instanceof DateIsInTheFutureError) {
+    // error
+} else {
+    display(result)
+}
+```
+
+encode likely exception in parse's signature.
+communicate to consumers which specific exceptions might be thrown
+force consumer to handle or rethrow each of the exception
+
+```ts
+// lazy consumer can just swallow all error
+let result = parse()
+if(result instanceof Error) {
+    // error
+} else{
+    display(result)
+}
+```
+
+chaining and nesting error-giving operations can quickly get verbose
+
+```ts
+// you can't compose
+display(parse()) // error
+
+// explicit handle or throw down stream
+// the list of possile errors that a consumer has to handle grows quickly
+function x(): T | Error1 {
+  // ...
+}
+function y(): U | Error1 | Error2 {
+  let a = x();
+  if (a instanceof Error) {
+    return a;
+  }
+  // Do something with a
+}
+function z(): U | Error1 | Error2 | Error3 {
+  let a = y();
+  if (a instanceof Error) {
+    return a;
+  }
+  // Do something with a
+}
+```
+
+### monad -- monadic return type, chainable return type
+
+[option](https://en.wikipedia.org/wiki/Option_type)
+[result](https://en.wikipedia.org/wiki/Result_type)
+[blog post](https://medium.com/software-ascending/do-or-do-not-patterns-and-antipatterns-with-the-try-type-c77a63f74cc9)
+
+a powerful way to work with series of operations that may or may not
+succeed.
+* excellent type safety
+* signal to cosumer via the type system that a given operation might fail.
+
+don't interoperate with code that doesn't use `Option`
+
+```ts
+interface Option<T> {
+    map<U>(f: (value: T) => None): None;
+    map<U>(f: (value: T) => Option<U>): Option<U>;
+    getOrElse(value: T): T;
+}
+class Some<T> implements Option<T> {
+    #value: T;
+    constructor(value: T) {
+        this.#value = value;
+    }
+
+    map<U>(f: (value: T) => None): None;
+    map<U>(f: (value: T) => Some<U>): Some<U>;
+    map<U>(f: (value: T) => Option<U>): Option<U> {
+        return f(this.#value)
+    }
+
+    getOrElse(): T {
+        return this.#value
+    }
+}
+
+class None implements Option<never> {
+    map(): None {
+        return this;
+    }
+    getOrElse<U>(value: U): U {
+        return value
+    }
+}
+
+function Option<T>(value?: null | undefined): None;
+function Option<T>(value: T): Some<T>;
+function Option<T>(value: T): Option<T> {
+    if(value == null) return new None()
+    return new Some(value)
+} 
+
+let result = Option(6)
+            .map(n => Option(n * 3))
+            .map(() => Option())
+            .getOrElse(7)
+
+console.log(result);
+```
+
+in ts, every complex type is covariant in its member -- objects,
+classes, arrays, and function return types -- with one exception:
+funciton parameter types, which are contravariant.
+
+a function A is a subtype of function B if:
+
+* A has the same or lower arity(number of parameters) than b
+* A's this type either isn't specified, or is >: B's this type
+* each of A's parameter is >: its corresponding parameter in B
+* A's return type is <: B's return type
+
+some languages are invariant in property types
+some languages have different rules for mutable and immutable objects
+some languages even have explicit syntax for programmers to specify variance for their own data types.
+
 
