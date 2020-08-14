@@ -233,6 +233,24 @@ webpack bundler
 [new handbook](https://github.com/microsoft/TypeScript-New-Handbook)
 [blog](https://devblogs.microsoft.com/typescript/)
 
+[website](https://github.com/microsoft/TypeScript-Website)
+[website roadmap](https://github.com/microsoft/TypeScript-Website/issues/130)
+[tutorial cn](https://github.com/xcatliu/typescript-tutorial)
+[deep dive cn](https://jkchao.github.io/typescript-book-chinese/)
+[handbook cn](https://zhongsp.gitbook.io/typescript-handbook/)
+[nuxt, next, nest](https://dev.to/laurieontech/nuxt-next-nest-my-head-hurts-5h98)
+
+
+https://cs.lmu.edu/~ray/notes/introtypescript/
+https://mariusschulz.com/blog/series/typescript-evolution
+https://2ality.com/2018/04/type-notation-typescript.html
+https://github.com/basarat/typescript-book
+https://github.com/microsoft/TypeScript-New-Handbook
+https://github.com/formium/tsdx
+https://www.valentinog.com/blog/typescript/
+https://github.com/dzharii/awesome-typescript
+https://github.com/semlinker/awesome-typescript
+
 starter
 
 [starter ts node](https://github.com/microsoft/TypeScript-Node-Starter)
@@ -2353,6 +2371,8 @@ nested
 
 condition ? value : (condition ? value : value)
 
+https://medium.com/javascript-scene/nested-ternaries-are-great-361bddd0f340
+
 ```ts
 let a = false ? 'a' : false ? 'b' : false ? 'c' : 'd' // d
 
@@ -2397,7 +2417,7 @@ declare generic type parameters
 
 ```ts
 type ElementType<T> = T extends unknown[] ? T[number] : T;
-type A = ElementType<string[]>; // number
+type A = ElementType<string[]>; // string
 
 // using infer
 type ElementType<T> = T extends (infer U)[] ? U : T;
@@ -2452,6 +2472,12 @@ function fetchUser() {
 ```
 
 ### simulating nominal types/opaque types
+
+[issue 202](https://github.com/Microsoft/TypeScript/issues/202)
+[nominal typing](https://michalzalecki.com/nominal-typing-in-typescript/)
+[stackoverflow](https://stackoverflow.com/questions/56737033/how-to-define-an-opaque-type-in-typescript)
+https://codemix.com/opaque-types-in-javascript/
+https://evertpot.com/opaque-ts-types/
 
 ```ts
 type CompanyID = string;
@@ -2787,6 +2813,8 @@ function z(): U | Error1 | Error2 | Error3 {
 
 ### monad -- monadic return type, chainable return type
 
+Monad design pattern
+
 [option](https://en.wikipedia.org/wiki/Option_type)
 [result](https://en.wikipedia.org/wiki/Result_type)
 [blog post](https://medium.com/software-ascending/do-or-do-not-patterns-and-antipatterns-with-the-try-type-c77a63f74cc9)
@@ -2804,8 +2832,8 @@ interface Option<T> {
     map<U>(f: (value: T) => Option<U>): Option<U>;
     getOrElse(value: T): T;
 }
-class Some<T> implements Option<T> {
-    #value: T;
+class Some<T> implements Option<T> { // 1. Some must be subtype of Option
+    #value: T;                      // 2. No excess property checking
     constructor(value: T) {
         this.#value = value;
     }
@@ -2860,4 +2888,949 @@ some languages are invariant in property types
 some languages have different rules for mutable and immutable objects
 some languages even have explicit syntax for programmers to specify variance for their own data types.
 
+## chap8 asynchronous programming
 
+asynchronous programming:
+    a style of structuring a program whereby *a call to some unit of functionality*
+    triggers an action that is allowed to continue outside of the ongoing flow of the program.
+
+event-based user-interfaces such as the browser
+non-blocking eventede I/O
+
+filesystem:
+
+JavaScript is single-threaded, but Node.js is not. By default, a Node.js process will spin up four "worker threads" for
+performing filesystem I/O. Reads and writes are distributed across the worker threads and these operations may block but
+they never block the JavaScript thread
+
+socket I/O:
+
+Socket I/O operations are performed on the main JavaScript thread but only *non-blocking system calls*.
+
+asynchronous nature of the platform ==> serial-style programming abstraction
+
+* run to completion
+* schedule async operation
+
+* callbacks
+* promises
+* streams
+
+event-loop concurrency model, how things work?
+
+navtive asynchronous API call, setup the callback, return immediately
+
+### callbacks
+
+callbacks are just functions
+
+```ts
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    export function readFile(path: PathLike | number, options: { encoding?: null; flag?: string; } | undefined | null, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    export function readFile(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | string, callback: (err: NodeJS.ErrnoException | null, data: string) => void): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    export function readFile(
+        path: PathLike | number,
+        options: BaseEncodingOptions & { flag?: string; } | string | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, data: string | Buffer) => void,
+    ): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     */
+    export function readFile(path: PathLike | number, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+```
+
+you can't use types to help guide your intuition about the nature of a function's synchronicity.
+
+callbacks are also difficult to sequence
+
+```ts
+async1((err1, res1) => {
+  if (res1) {
+    async2(res1, (err2, res2) => {
+      if (res2) {
+        async3(res2, (err3, res3) => {
+          // ...
+        });
+      }
+    });
+  }
+});
+```
+
+run asynchronous tasks in parallel
+
+race asynchronous tasks
+
+### promise
+
+a chain of asynchronous tasks
+
+```ts
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * If a `FileHandle` is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    function readFile(path: PathLike | FileHandle, options?: { encoding?: null, flag?: OpenMode } | null): Promise<Buffer>;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * If a `FileHandle` is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    function readFile(path: PathLike | FileHandle, options: { encoding: BufferEncoding, flag?: OpenMode } | BufferEncoding): Promise<string>;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+     * If a `FileHandle` is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag.
+     * If a flag is not provided, it defaults to `'r'`.
+     */
+    function readFile(path: PathLike | FileHandle, options?: BaseEncodingOptions & { flag?: OpenMode } | BufferEncoding | null): Promise<string | Buffer>;
+```
+
+### async and await
+
+await syntax sugar for .then
+wrap your await in a regular try/catch block
+
+```ts
+async function getUser() {
+    try {
+        let user = await getUserId(19)
+        let location = await getLocation(user)
+        console.info('get location', user)
+    } catch (err) {
+        console.error(err)
+    } finally {
+        console.info('done getting location')
+    }
+}
+```
+
+### async streams
+
+lists of things where each thing comes in at some point in the future.
+
+event emitter `EventEmitter`.
+
+At a high level, event emitters offer APIs that support emitting events on a channel and
+listening for events on that channel
+
+```ts
+interface EventEmitter {
+    on(channel: string | symbol, listener: (...args: any[]) => void): this;
+    emit(channel: string | symbol, ...args: any[]): boolean;
+}
+```
+
+examples
+
+```ts
+import redis from 'redis';
+// Create a new instance of a Redis clientlet
+let client = redis.createClient();
+// Listen for a few events emitted by the client
+client.on('ready', () => console.info('Client is ready'));
+client.on('error', (e) => console.error('An error occurred!', e));
+client.on('reconnecting', (params) => console.info('Reconnecting...', params));
+```
+
+callback function argument depends on the channel.
+
+#### overload
+
+```ts
+type RedisClient = {
+  on(event: 'ready', f: () => void): void;
+  on(event: 'error', f: (e: Error) => void): void;
+  on(
+    event: 'reconnecting',
+    f: (params: { attempt: number; delay: number }) => void
+  ): void;
+};
+```
+
+#### mapped types
+
+```ts
+type Events = {
+  ready: void;
+  error: Error;
+  reconnecting: { attempt: number; delay: number };
+};
+
+type RedisClient = {
+  on<E extends keyof Events>(event: E, f: (arg: Events[E]) => void): void;
+  emit<E extends keyof Events>(event: T, arg: Events[E]): void;
+};
+```
+
+pulling out event names and arguments into shape and mapping over that shape to 
+generate listeners and emitters is common in real-world typescript code.
+
+`WindowEventMap` mapping from event name to event type
+
+```ts
+// lib.dom.ts
+interface WindowEventMap extends GlobalEventHandlersEventMap {
+  // ...
+  contextmenu: PointerEvent;
+  dblclick: MouseEvent;
+  devicelight: DeviceLightEvent;
+  devicemotion: DeviceMotionEvent;
+  deviceorientation: DeviceOrientationEvent;
+  drag: DragEvent;
+  // ...
+}
+
+interface Window
+  extends EventTarget,
+    WindowTimers,
+    WindowSessionStorage,
+    WindowLocalStorage,
+    WindowConsole,
+    GlobalEventHandlers,
+    IDBEnvironment,
+    WindowBase64,
+    GlobalFetch {
+  // ...
+  addEventListener<K extends keyof WindowEventMap>(
+    type: K,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  removeEventListener<K extends keyof WindowEventMap>(
+    type: K,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
+    options?: boolean | EventListenerOptions
+  ): void;
+}
+```
+
+## chap 9 frontend and backend framework
+
+back: the networking and database layer on the server
+front: user interface and state management
+
+taking advantage existing tools, libraries, and frameworks
+
+### frontend
+
+using dom api, `lib.dom.d.ts` built-in browser and DOM type declarations
+
+```json
+{
+    "compilerOptions": {
+        "lib": ["dom", "esnext"]
+    }
+}
+```
+```ts
+// read properties from the global window object
+let model = {
+    url: window.location.href
+}
+// create a <input /> element
+let input = document.createElement('input')
+// give it some css class
+input.classList.add('input', 'urlinput')
+// event
+input.addEventListener('change', () => {
+    model.url = input.value.toUpperCase()
+})
+document.body.appendChild(input)
+```
+
+framework to abstract away how DOM rendering and rerending, data binding and events.
+
+#### react
+
+React components are both defined and consumed in typescript.
+
+JSX JSX compiler
+
+```jsx
+<ul class='list'>
+    <li>Homemad granola with yogurt</li>
+    <li>Fantastic french toast with fruit</li>
+</ul>
+```
+
+Babel `transform-react-jsx-plugin`
+
+```js
+React.createElement(
+    'ul',
+    {'class': 'list'},
+    React.createElement(
+        'li',
+        null,
+        'Homemad granola with yogurt'
+    ),
+    React.createElement(
+        'li',
+        null,
+        'Fantastic french toast with fruit'
+    ),
+)
+```
+
+
+tsconfig.json
+
+```json
+{"esModuleInterop": true}
+```
+
+```ts
+import React from 'react' // this is supported by node esmodule to import commonjs module
+```
+
+or
+
+```ts
+import * as React from 'react'
+```
+
+TSX
+
+```json
+{
+    "compilerOptions": {
+        "jsx": "react"
+    }
+}
+```
+
+function components and class components
+
+take some properties and render some TSX
+
+```tsx
+import React from 'react'
+
+type Props = {
+    isDisabled?: boolean
+    size: 'Big' | 'Small'
+    text: string
+    onClick(event: React.MouseEvent<HTMLButtonElement>): void // react events
+}
+
+// input - props objects; output -  react renderable type (TSX, string, number, boolean, null, undefined)
+export function FancyButton(props: Props) { 
+    const [toggled, setToggled] = React.useState(false) // hook to declare local state `useState<number[]>([])`
+
+    return (
+        <button
+        className={'Size-' + props.size}
+        disabled={props.isDisabled || false}
+        onClick={event => {
+            setTogged(!toggled)
+            props.onClick(event)
+        }}
+        >
+        {props.text}</button>
+    )
+}
+
+
+let button = <FancyButton 
+    size='Big'
+    text='Sign Up Now'
+    onClick={() => console.log('Clicked!')}
+/>
+```
+
+```tsx
+import React from 'react'
+
+import {FancyButton} from './FancyButton'
+
+type Props = {
+    firstName: string
+    userId: string
+}
+type State = {
+    isLoading: boolean
+}
+
+class SignupForm extends React.Component<Props, State> {
+    state = {
+        isLoading: false
+    }
+    render() {
+        return <>
+            <h2>Sign up for 7-day supply of our tasty toothpaste now, {this.props.firstName}</h2>
+            <FancyButton 
+                isDisabled= {this.state.isLoading}
+                size='Big'
+                text='Sign up now'
+                onClick={this.signUp}
+            />
+        </>
+    }
+    private async signUp() {
+        this.setState({isLoading: true})
+        try {
+            await fetch('/api/signup?userId=' + this.props.userId)
+        } finally {
+            this.setState({isLoading: false})
+        }
+    }
+}
+```
+
+### typesafe API
+
+tools and standards
+
+typed, code-generated APIs
+
+* Swagger for RESTful APIs
+* Apollo and Relay for GraphQL
+* gRPC and Apache Thrift for RPC
+
+rely on a common source of truth for both server and clients
+
+* data models for Swagger
+* GraphQL schemas for Apollo
+* Protocol Buffers fro gRPC
+
+compiled into language-specific bindings for whatever language
+you might be using.
+
+code generation is what prevenst your client and server from getting
+out of sync with each other.
+
+
+### backend
+
+```ts
+// PostgreSQL, using node-postgres
+let client = new Client()
+let res = await client.query(
+    'SELECT name FROM users where id = $1',
+    [739311]
+) // any
+
+// MongoDB, using node-mongodb-native
+db.collection('users')
+    .find({id: 739311})
+    .toArray((err, user) => {
+        // user is any
+    })
+```
+
+ORMs
+
+TypeORM
+
+```ts
+let user = await UserRepositry
+            .findOne({id: 739311}) // User | undefined
+```
+
+## chap 10
+
+* how TSC resolves modules
+* how *module bundler* resolves modules
+* how module are actually loaded into runtime, *module loader*
+
+how tsc resolves and compiles modules.
+
+global namespace
+* collisions between variable names
+
+* objects
+    ```js
+    window.emailListModule = {
+        renderList() {
+            // ...
+        },
+        // ...
+    }
+    // other module
+    window.appModule = {
+        renderApp() {
+            // using other module's identifier
+            window.emailListModule.renderList()
+        }
+    }
+    ```
+* immediately invoked function expression(IIFE)
+
+* dynamically loading javascript -- module loader, asynchronously load js code after the initial page load has happened
+
+commonjs module
+
+```js
+var emailList = require('emailListModule')
+var emailComposer = require('emailComposerModule')
+
+module.exports.renderBase = function() {
+    //...
+}
+```
+
+browserify
+
+`require` is synchronous(blocking) and dynamic(can be used in if, module specifier can be computed during runtime)
+
+`module.exports` can appear anywhere even in dead code branches
+`require` calls can appear anywhere and contain arbitraty strings and expressions
+
+tsc ways to consume and export code
+* global declaration
+* es module, `import` and `export`
+* `import` from commonjs modules
+compile modules to
+* globals
+* es2015
+* commonjs
+* amd
+* systemjs
+* umd 
+
+### import and export
+
+```ts
+// a.ts
+export function foo() {}
+export function bar() {}
+
+// b.ts
+import {foo, bar} from './a'
+foo()
+export let result = bar()
+
+// default exports
+// c.ts
+export default function meow(loudness: number) {}
+
+// d.st
+import meow from './c' // not use {}
+meow(11)
+
+// import everthing
+// e.ts
+import * as a from './a'
+a.foo()
+a.bar()
+
+// reexporting
+// f.ts
+export * from './a'
+export {result} from './b'
+export meow from './c'
+
+// import for side-effect
+import './global'
+
+// export types and interfaces as well as values
+// it's perfectly fine to export two things that share the same name
+// one at the value level and one at the type level
+// ts will infer whether you meant the type or the value
+
+// g.ts
+export let x = 3
+export type x = {y: string}
+
+// h.ts
+import {x} from './g'
+
+let a = x + 1 // x refers to value
+let b: x = {y: 'z'} // x refers to type
+```
+
+module paths are filenames on the filesystem.
+
+add `.js` on module paths, to support node esmodule
+
+https://github.com/microsoft/TypeScript/issues/16577
+https://github.com/microsoft/TypeScript/issues/13422
+https://stackoverflow.com/questions/44979976/typescript-compiler-is-forgetting-to-add-file-extensions-to-es6-module-imports
+
+*import elision*:
+    if you have an import statement whose export is only used in a type position
+    in your module, ts won't generate any js code for that import
+
+### dynamic imports
+
+code splitting and lazy-loading
+
+load chunks of code when they're actually needed.
+
+```js
+let locale = await import('locale_us-en')
+```
+
+you can pass an arbitrary expression that evaluates to a string to import call.
+
+to safely use dynamic imports, be sure to either:
+
+* pass a string literal directly to import, without assigning the string to a varaible first
+* pass a an expression to import and manually annotate the module's signature
+
+pattern:
+    statically import the module, but use it only in a type position
+
+```ts
+import {locale} from './locales/locale-us'
+
+async function main() {
+    let userLocale = await getUserLocale()
+    let path = `./locales/locale-${userLocale}`
+    let localeUS: typeof locale = await import(path)
+}
+```
+
+supports dynamic imports in `esnext` module mode only
+
+`{"module": "exnext"}`
+
+### using commonjs and amd code
+
+`{"esModuleInterop": true}`
+
+```ts
+import fs from 'fs'
+fs.readFile('some/file.txt')
+
+import tedis from 'tedis'
+
+let client = new tedis.Tedis({})
+```
+
+CommonJS modules can be imported by importing the default export.
+For example:
+
+```js
+import pkg from 'tedis';
+const { Tedis } = pkg;
+```
+
+### `namespace` for global library and functions
+
+prefers module for explicit dependencies
+
+namespace are automatically merged.
+
+```ts
+namespace Flowers {
+    export function give(count: number) {
+        return count + ' flowers'
+    }
+}
+```
+
+```js
+let Flowers
+(function (Flowers) {
+    function give(count: number) {
+        return count + ' flowers'
+    }
+    Flowers.give = give
+})(Flowers || Flowers = {})
+```
+
+### declaration merging
+
+* merging value and type with the same name, companion object pattern
+* merging multiple interface
+* merging multiple namespace
+
+### `moduleResolution`
+
+how ts resolve module name in project.
+
+node: 
+    with prefix, local file
+    without, `node_modules`
+
+    `main` and `typings` or `types` in package.json
+
+    types typeRoots in tsconfig.json
+
+when importing a file wiht an unspecified extension, typescript first looks for
+a file with that name and `.ts` extension, followed by `.tsx`, `.d.ts`, and finally `.js`
+
+you can specify `.js` `.jsx` on module paths
+
+## chap11
+
+### type declaration
+
+`.d.ts`: a way to attach typescript types to javascript code.
+
+* defines types
+* `declare`, to indicates there exists a value defined somewhere, ambient value declaration
+* you don't include things that aren't exported, or types for local variables
+
+`tsc -d Observalbe.ts`
+
+* ship compiled js files along with type declaration for both js consumer and ts consumer
+* helps keep compile times for your application fast
+
+### ambient
+
+script-mode
+
+ambient variable declaration:
+    global variable, polyfill globals
+ambient type declaration:
+    globally available everywhere in project, you don't have to import it first
+ambient module declaration:
+
+```ts
+// polyfills.ts
+declare let process: {
+    env: {
+        NODE_ENV: 'development' | 'production'
+    }
+}
+process = {
+    env: {
+        NODE_ENV: 'production'
+    }
+}
+```
+
+`lib` option
+
+```ts
+// types.ts
+type ToArray<T> = T extends unknown[] ? T : T[]
+
+// in any project file
+function toArray<T>(a: T): ToArray<T> {
+    // ...
+}
+```
+
+model data types that are used throughout your application
+
+#### ambient module declaration
+
+When you consume a JavaScript module and want to quickly declare some typesfor it so you can use it
+safely—without having to contribute the typedeclarations back to the JavaScript module’s
+GitHub repository orDefinitelyTyped first
+
+```ts
+declare module 'module-name' {
+    export type MyType = number
+    export type MyDefaultType = {a: string}
+    export let myExport: MyType
+    let myDefaultExport: MyDefaultType
+    export default myDefaultExport
+}
+```
+
+### using third party code
+
+1. code with typings `tedis`
+
+`npm i tedis`
+
+2. typings on `DefinitelyTyped`
+
+`npm i express`
+`npm i -D @types/express`
+
+3. untyped third-party js
+
+3.1 whitelist the specific import
+
+```ts
+// @ts-ignore
+import Unsafe from 'untyped-module'
+Unsafe // any
+```
+
+3.2 empty ambient module declaration
+
+```ts
+// types.d.ts
+declare module 'nearby-ferret-alerter'
+```
+
+slightly better, now there's a central file
+that enumerates all the untyped modules in the project
+
+3.3 ambient module declaration
+
+```ts
+// types.d.ts
+declare module 'nearby-ferret-alerter' {
+    export default function alert(loudness: 'soft' | 'loud'): Prpmise<void>;
+    export function getFerretCount(): Promise<number>;
+}
+```
+
+DefinitelyTyped
+TypeSeach
+dts-gen
+
+## chap12
+
+top level src/ folder and top level dist/ folder
+
+arfifacts
+
+.js  {"emitDeclarationOnly": false}
+.js.map {"sourceMap": true}
+.d.ts {"declaration": true}
+.d.ts.map {"declarationMap": true}
+
+source map:
+    link each piece of your generated javascript back to
+    the specific line and column of the typescript file that
+    it was generated from.
+    * debugging
+    * error monitoring, mapping lines and columns in js exception stack traces back to js
+    * logging
+
+downleveling:
+    * transpile
+    * polyfill
+
+tsc only support transpile.
+
+* target
+* module
+* lib
+
+source map:
+
+type checking and compiling with tsc
+tree-shake with rollup
+preevaluate with prepack
+minify wiht uglify
+
+using source map in development, ship source map to production.
+if you rely on some level of security through obscurity for browser code,
+don't ship source maps to browsers in production.
+
+### project references
+
+split project into multiple projects, a project is simply a folder that contains
+a tsconfig.json and some ts code.
+
+split code in such a way that code that tends to be updated together lives in same folder
+
+in each project, create a tsconfig.json
+
+```json
+{
+    "compilerOptions": {
+        "composite": true, // this project is a subproject of a larger project
+        "declaration": true,
+        "declarationMap": true,
+        "rootDir": "."
+    },
+    "include": [
+        "./**/*.ts"
+    ],
+    "reference": [ // an arry of subprojects that your project depends on
+        {
+            "path": "../myReferenceProject", // a folder contains tsconfig.json
+            // "prepend": true
+        }
+        
+    ]
+}
+```
+
+how references work?
+projects have access to each other's declaration files and emitted js,
+but not their source ts files. this create a boundary beyond which tsc
+won't try to retypecheck or recompile your code: if you update a line
+of code in your subproject A, tsc doesn't have typecheck your other subproject B.
+
+
+using extends to reduce tsconfig.json boilerplate
+
+### error monitoring
+
+sentry
+bugsnag
+
+### on server
+
+feed your source maps into your nodejs process.
+
+source-map-support
+
+process monitoring:
+* PM2
+* winston
+* sentry
+
+### on browser
+
+bundler
+* webpack
+* rollup
+* parcel
+
+dynamic imports, lazy-load, automatic code splitting
+
+`outFile`
+
+measuring page load time
+
+* New Relic
+* Datadog
+* polyfilling
+    core-js
+    polyfill.io
+
+### triple slash directives
+
+adjust compiler setting for a specific file, indicate that your file depends on another file.
+
+ambient type in tsconfig.json
+
+* types
+* files
+* include
+
+types triple-slash directive
+
+dependency on ambient type declaration
+/// <reference types="./global">
+dependency on @types/jasmine/index.d.ts
+/// <reference types="jasmine">

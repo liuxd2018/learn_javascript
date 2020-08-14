@@ -1,39 +1,36 @@
 class Hello {
-    readonly hello: string = 'default';
-    num?: number;
-    constructor(number: number);
-    constructor(hello: string);
-    constructor(hello: string|number) {
-        if(typeof hello === "string") {
-            this.hello = hello
-        } else {
-            this.num = hello
-        }
+  readonly hello: string = 'default';
+  num?: number;
+  constructor(number: number);
+  constructor(hello: string);
+  constructor(hello: string | number) {
+    if (typeof hello === 'string') {
+      this.hello = hello;
+    } else {
+      this.num = hello;
     }
-        
-
-
+  }
 }
 
 type O = typeof Hello;
 
 interface A {
-    p: string | number;
-    good(x: number):string;
-    bad(x: number):string;
+  p: string | number;
+  good(x: number): string;
+  bad(x: number): string;
 }
 interface B extends A {
-    p: number;
-    good(x: string | number): string; 
-    // bad(x: string): string; // Error
+  p: number;
+  good(x: string | number): string;
+  // bad(x: string): string; // Error
 }
 
 interface User {
-    name: string
+  name: string;
 }
 
 interface User {
-    age: number;
+  age: number;
 }
 
 // interface Animal {
@@ -47,23 +44,23 @@ interface User {
 // }
 
 class Cat {
-    #name = "MeowMeow"
-    eat(food: string) {
-        console.info(`${this.#name} ate some ${food}. Mmm!`)
-    }
-    sleep(hours: number) {
-        console.info(`${this.#name} slept for ${hours} hours`)
-    }
-    meow() {
-        console.info(`${this.#name} Meow`)
-    }
+  #name = 'MeowMeow';
+  eat(food: string) {
+    console.info(`${this.#name} ate some ${food}. Mmm!`);
+  }
+  sleep(hours: number) {
+    console.info(`${this.#name} slept for ${hours} hours`);
+  }
+  meow() {
+    console.info(`${this.#name} Meow`);
+  }
 }
 
-function make(cat:Cat) {
-    cat.meow();
+function make(cat: Cat) {
+  cat.meow();
 }
 
-make(new Cat())
+make(new Cat());
 
 // let obj = {
 //     #name : 'm',
@@ -79,84 +76,84 @@ make(new Cat())
 
 // make(obj)
 
-
 type State = {
-    [key: string]: string;
-}
+  [key: string]: string;
+};
 
 class StringDataBase {
-    state: State
-    constructor(state: State = {}) {
-        this.state = state;
+  state: State;
+  constructor(state: State = {}) {
+    this.state = state;
+  }
+  get(key: string): string | null {
+    return key in this.state ? this.state[key] : null;
+  }
+  set(key: string, value: string): void {
+    this.state[key] = value;
+  }
+  static from(state: State) {
+    let db = new StringDataBase();
+    for (let key in state) {
+      db.set(key, state[key]);
     }
-    get(key: string): string | null {
-        return key in this.state ? this.state[key] : null
-    }
-    set(key: string, value: string): void {
-        this.state[key] = value
-    }
-    static from(state: State) {
-        let db = new StringDataBase();
-        for (let key in state) {
-            db.set(key, state[key])
-        }
-        return db;
-    }
+    return db;
+  }
 }
 
 // instance type
 
 interface StringDataBase {
-    state: State;
-    get(key: string): string | null;
-    set(key: string, value: string): void;
+  state: State;
+  get(key: string): string | null;
+  set(key: string, value: string): void;
 }
 
 // constructor type
 // typeof StringDataBase
 interface StringDataBaseConstructor {
-    new(state?: State): StringDataBase;
-    from(state: State): StringDataBase;
+  new (state?: State): StringDataBase;
+  from(state: State): StringDataBase;
 }
 
+type ClassConstructor<T> = new (...args: any[]) => T;
 
-type ClassConstructor<T> = new(...args: any[]) => T
+function withDebug<C extends ClassConstructor<{ getDebugValue(): object }>>(
+  klass: C
+) {
+  return class extends klass {
+    // constructor(...args: any[]) {
+    //     super(...args)
+    // }
 
-function withDebug<C extends ClassConstructor<{getDebugValue(): object}>>(klass: C) {
-    return class extends klass {
-        // constructor(...args: any[]) {
-        //     super(...args)
-        // }
-
-        debug() {
-            let name = klass.name
-            let value = this.getDebugValue() // contract method
-            return `${name}(${JSON.stringify(value)})`
-        }
+    debug() {
+      let name = klass.name;
+      let value = this.getDebugValue(); // contract method
+      return `${name}(${JSON.stringify(value)})`;
     }
+  };
 }
 
 class User {
-    #id: number;
-    #firstName: string;
-    #lastName: string;
-    constructor(id: number, firstName: string, lastName: string) {
-        this.#id = id;
-        this.#firstName = firstName;
-        this.#lastName = lastName;
-    }
+  #id: number;
+  #firstName: string;
+  #lastName: string;
+  constructor(id: number, firstName: string, lastName: string) {
+    this.#id = id;
+    this.#firstName = firstName;
+    this.#lastName = lastName;
+  }
 
-    getDebugValue() {
-        return {
-            id: this.#id,
-            name: `${this.#firstName} ${this.#lastName}`
-        }
-    }
+  getDebugValue() {
+    return {
+      id: this.#id,
+      name: `${this.#firstName} ${this.#lastName}`,
+    };
+  }
 }
 
-const DebugUser = withDebug(User)
+const DebugUser = withDebug(User);
 
-let user = new DebugUser(3, 'hello', 'world')
+let user = new DebugUser(3, 'hello', 'world');
 
-console.log(user.debug())
-console.log(User.name)
+console.log(user.debug());
+console.log(User.name);

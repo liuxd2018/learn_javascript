@@ -1,7 +1,6 @@
 export const Color = {
-    RED:'red',
-    GREEN:'green'
-} as const
+  RED: 'red',
+  GREEN: 'green',
+} as const;
 
-export type Color = typeof Color[keyof typeof Color]
-
+export type Color = typeof Color[keyof typeof Color];

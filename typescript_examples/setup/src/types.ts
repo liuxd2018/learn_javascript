@@ -3,8 +3,6 @@
 // // let c = true//boolean
 // // const d = {x: 3} // {x: number}
 
-import { type } from 'os';
-
 // // more strict
 
 // // const a = 'x'
@@ -306,10 +304,9 @@ let userId = UserID('d21b1dbf');
 // queryForUser(userId); // OK
 // queryForUser(companyId); // Error
 
-
 const obj = {
-    helo: 'helo',
-    hi: 'hi'
-} as const
+  helo: 'helo',
+  hi: 'hi',
+} as const;
 
-type aaa = (typeof obj)['helo']
+type aaa = typeof obj['helo'];
